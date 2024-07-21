@@ -7,6 +7,7 @@ const Todos = () => {
   const [location, setLocation] = useState('');
   const [description, setDescription] = useState('');
   const [showTasks, setShowTasks] = useState(true); // State to manage visibility of tasks
+  const [editIndex, setEditIndex] = useState(null); // State to manage the index of the task being edited
 
   // Load tasks from localStorage when the component mounts
   useEffect(() => {
@@ -22,14 +23,37 @@ const Todos = () => {
   const addTask = (e) => {
     e.preventDefault();
     if (title && location && description) {
-      const newTask = { title, location, description };
-      setTasks([...tasks, newTask]);
+      if (editIndex !== null) {
+        // Update the task at the specified index
+        const updatedTasks = tasks.map((task, index) => 
+          index === editIndex ? { title, location, description } : task
+        );
+        setTasks(updatedTasks);
+        setEditIndex(null);
+      } else {
+        // Add a new task
+        const newTask = { title, location, description };
+        setTasks([...tasks, newTask]);
+      }
       setTitle('');
       setLocation('');
       setDescription('');
     } else {
       alert('All fields are required!');
     }
+  };
+
+  const editTask = (index) => {
+    const task = tasks[index];
+    setTitle(task.title);
+    setLocation(task.location);
+    setDescription(task.description);
+    setEditIndex(index);
+  };
+
+  const deleteTask = (index) => {
+    const updatedTasks = tasks.filter((task, i) => i !== index);
+    setTasks(updatedTasks);
   };
 
   const clearOutput = () => {
@@ -92,7 +116,9 @@ const Todos = () => {
             </div>
             <div className="row">
               <div className="col-12 text-center">
-                <button className="btn btn-success px-5" type="submit">Add Task</button>
+                <button className="btn btn-success px-5" type="submit">
+                  {editIndex !== null ? 'Update Task' : 'Add Task'}
+                </button>
               </div>
             </div>
           </form>
@@ -106,20 +132,31 @@ const Todos = () => {
               <div className="border border-2 rounded p-3" style={{ minHeight: '200px' }}>
                 {showTasks && (tasks.length > 0 ? (
                   <div className="table-responsive">
-                    <table className="table">
+                    <table className="table table-striped">
                       <thead>
                         <tr>
+                          <th>#</th>
                           <th>Title</th>
                           <th>Location</th>
                           <th>Description</th>
+                          <th>Actions</th>
                         </tr>
                       </thead>
                       <tbody>
                         {tasks.map((task, index) => (
                           <tr key={index}>
+                            <td>{index + 1}</td>
                             <td>{task.title}</td>
                             <td>{task.location}</td>
                             <td>{task.description}</td>
+                            <td className="d-flex justify-content-center align-items-center">
+                              <button className="btn btn-info btn-sm me-2" onClick={() => editTask(index)}>
+                                Edit
+                              </button>
+                              <button className="btn btn-danger btn-sm" onClick={() => deleteTask(index)}>
+                                Delete
+                              </button>
+                            </td>
                           </tr>
                         ))}
                       </tbody>
